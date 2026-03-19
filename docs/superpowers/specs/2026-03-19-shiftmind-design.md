@@ -144,11 +144,13 @@ Specific date overrides (vacation, sick days).
 | role | text | |
 | created_at | text | ISO timestamp |
 
+Unique constraint: `(worker_id, date, shift)` — prevents double-booking at the database level.
+
 ---
 
 ## 3. Seed Data
 
-45–60 workers with realistic names distributed as:
+53 workers with realistic names distributed as:
 
 - 8 RNs (some part-time)
 - 14 CNAs
@@ -175,7 +177,7 @@ When filling a slot (role + shift + date), eligible workers are scored:
 score = (0.5 × fairness) + (0.3 × fulltime) + (0.2 × seniority)
 ```
 
-- **fairness:** `1 - (shifts_this_week / max_shifts_this_week)` — fewer shifts = higher score
+- **fairness:** `1 - (shifts_this_week / max_shifts_this_week)` — fewer shifts = higher score. If no workers have shifts yet (start of week), all get fairness = 1.0
 - **fulltime:** 1.0 if full-time, 0.3 if part-time
 - **seniority:** normalized by hire date — longest tenure = 1.0, newest = 0.0
 
@@ -191,13 +193,19 @@ Highest-scoring eligible worker is assigned. If no eligible worker exists, the s
 
 ## 5. REST API
 
+### Error Response Format
+
+All error responses use: `{ error: string }` with appropriate HTTP status codes (400 bad request, 404 not found, 409 conflict for double-booking, 500 internal).
+
 ### Workers
+
+Register `/available` before `/:id` to avoid Express route conflict.
 
 | Method | Route | Description |
 |--------|-------|-------------|
 | GET | `/api/workers` | List all active workers. Query: `?role=CNA` |
+| GET | `/api/workers/available` | Query: `?date=...&shift=...&role=...` — **register before /:id** |
 | GET | `/api/workers/:id` | Single worker with availability |
-| GET | `/api/workers/available` | Query: `?date=...&shift=...&role=...` |
 
 ### Schedule Templates
 
@@ -205,8 +213,11 @@ Highest-scoring eligible worker is assigned. If no eligible worker exists, the s
 |--------|-------|-------------|
 | GET | `/api/templates` | List all templates |
 | GET | `/api/templates/:id` | Template with its slots |
+| PATCH | `/api/templates/:id/slots` | `{role, shift, requiredCount}` — update a slot's required count |
 
 ### Assignments
+
+Unique constraint on `(worker_id, date, shift)` enforced at database level.
 
 | Method | Route | Description |
 |--------|-------|-------------|
@@ -214,19 +225,35 @@ Highest-scoring eligible worker is assigned. If no eligible worker exists, the s
 | POST | `/api/assignments` | Create single assignment |
 | DELETE | `/api/assignments/:id` | Remove assignment, returns gap info |
 
-### Scheduling Actions
+### Availability
 
 | Method | Route | Description |
 |--------|-------|-------------|
-| POST | `/api/schedule/auto-fill` | `{startDate, endDate, templateId}` — fills all open slots |
+| GET | `/api/workers/:id/availability` | Get worker's weekly pattern + overrides |
+| POST | `/api/workers/:id/availability-overrides` | `{date, isAvailable, reason?}` — add override |
+| DELETE | `/api/availability-overrides/:id` | Remove an override |
+
+### Scheduling Actions
+
+`templateId` is optional in all scheduling endpoints. When omitted, the system auto-selects the appropriate template per date based on `day_type` (weekday Mon-Fri → weekday template, Sat-Sun → weekend template).
+
+| Method | Route | Description |
+|--------|-------|-------------|
+| POST | `/api/schedule/auto-fill` | `{startDate, endDate, templateId?}` — fills all open slots |
 | POST | `/api/schedule/fill-gap` | `{date, shift, role}` — finds best replacement for single gap |
-| GET | `/api/schedule/gaps` | `?startDate=...&endDate=...&templateId=...` — returns unfilled slots |
+| GET | `/api/schedule/gaps` | `?startDate=...&endDate=...` — returns unfilled slots (auto-selects templates per date) |
 
 ### Chat
 
 | Method | Route | Description |
 |--------|-------|-------------|
-| POST | `/api/chat` | `{message, conversationHistory}` — Aria endpoint |
+| POST | `/api/chat` | See chat request/response format below |
+
+Chat request: `{ message: string, conversationHistory: Array<{role: "user"|"assistant", content: string}> }`
+
+Chat response: `{ reply: string, actions: Array<{type: string, summary: string}> }`
+
+The `actions` array tells the frontend which data changed (e.g. `{type: "assignments_changed", summary: "Filled 3 slots"}`) so it knows to refetch calendar data.
 
 ### Session
 
@@ -235,6 +262,10 @@ Highest-scoring eligible worker is assigned. If no eligible worker exists, the s
 | GET | `/api/session` | Returns `{ name: "Demo Manager", role: "manager" }` |
 
 No authentication backend. Demo-only access via localStorage flag on the frontend.
+
+### CORS / Proxy
+
+In development, Vite proxies `/api` requests to the Express server on :3001 via `vite.config.ts`. No CORS configuration needed.
 
 ---
 
@@ -268,6 +299,8 @@ tools = [
 
 Each tool calls the same service functions used by the REST API handlers.
 
+**Note on `remove_worker_from_shift`:** Uses `workerName` because users type names in chat. The tool implementation first looks up the worker by name. If multiple matches exist, Aria asks for clarification before proceeding.
+
 ---
 
 ## 7. Frontend Design
@@ -300,16 +333,16 @@ Aria has a configurable avatar at `client/public/aria-avatar.png` with a gradien
 
 ### Role Badge Colors
 
-| Role | Hex | Abbrev |
-|------|-----|--------|
-| RN | #2D5A3D | RN |
-| CNA | #8B6E4E | CNA |
-| Med Tech | #4A6FA5 | Med |
-| Activities | #7A6298 | Act |
-| Kitchen | #C17C4E | Kitchen |
-| Housekeeping | #5B8A72 | Hsk |
-| Security | #6B7280 | Sec |
-| Supervisor | #BE4B4B | Sup |
+| DB Enum | Display Name | Hex | Badge Abbrev |
+|---------|-------------|-----|--------------|
+| RN | Registered Nurse | #2D5A3D | RN |
+| CNA | Nursing Assistant | #8B6E4E | CNA |
+| MED_TECH | Med Tech | #4A6FA5 | Med |
+| ACTIVITIES | Activities Coord. | #7A6298 | Act |
+| KITCHEN | Kitchen Staff | #C17C4E | Kitchen |
+| HOUSEKEEPING | Housekeeping | #5B8A72 | Hsk |
+| SECURITY | Security | #6B7280 | Sec |
+| SUPERVISOR | Supervisor | #BE4B4B | Sup |
 
 ### Typography
 
