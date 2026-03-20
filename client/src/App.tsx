@@ -6,7 +6,7 @@ import LoginPage from './features/auth/LoginPage';
 import RegisterPage from './features/auth/RegisterPage';
 import Sidebar from './features/sidebar/Sidebar';
 import SchedulePage from './features/calendar/SchedulePage';
-import WorkersPage from './pages/WorkersPage';
+import WorkersPage from './features/workers/WorkersPage';
 import TemplatesPage from './pages/TemplatesPage';
 import AriaPanel from './features/chat/AriaPanel';
 
