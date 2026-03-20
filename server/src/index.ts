@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from 'cors';
 import path from 'path';
 import dotenv from 'dotenv';
 
@@ -9,11 +10,22 @@ import scheduleRouter from './routes/schedule.js';
 import sessionRouter from './routes/session.js';
 import chatRouter from './routes/chat.js';
 import { removeAvailabilityOverride } from './services/workers.js';
+import { initDatabase } from './db/init.js';
 
 dotenv.config({ path: '../.env' });
 
+// --- Auto-initialize database on startup ---
+initDatabase();
+
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// --- CORS ---
+const corsOrigin = process.env.CORS_ORIGIN || '*';
+app.use(cors({
+  origin: corsOrigin === '*' ? true : corsOrigin.split(','),
+  credentials: true,
+}));
 
 app.use(express.json());
 

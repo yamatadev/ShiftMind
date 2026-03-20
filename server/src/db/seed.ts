@@ -261,16 +261,18 @@ const PART_TIME_PATTERNS: number[][] = [
 
 // ─── Seed Function ───────────────────────────────────────────────────
 
-async function seed() {
-  console.log('Starting seed...');
-
-  // --- Step 1: Workers ---
+/**
+ * Seed the database with demo data. Idempotent — skips if workers already exist.
+ * Can be called from server startup (init.ts) or as a standalone CLI script.
+ */
+export function seedDatabase(): boolean {
   const existingWorkers = db.select({ cnt: count() }).from(workers).get();
   if (existingWorkers && existingWorkers.cnt > 0) {
-    console.log(`Workers table already has ${existingWorkers.cnt} rows. Skipping seed.`);
-    sqlite.close();
-    return;
+    console.log(`[seed] Workers table already has ${existingWorkers.cnt} rows. Skipping.`);
+    return false;
   }
+
+  console.log('[seed] Starting seed...');
 
   const runSeed = sqlite.transaction(() => {
   console.log('Inserting 53 workers...');
@@ -507,11 +509,20 @@ async function seed() {
   }); // end transaction
 
   runSeed();
-  console.log('Seed complete!');
-  sqlite.close();
+  console.log('[seed] Seed complete!');
+  return true;
 }
 
-seed().catch((err) => {
-  console.error('Seed failed:', err);
-  process.exit(1);
-});
+// --- CLI entry point ---
+// When run directly via `tsx src/db/seed.ts`, execute and close connection.
+const isDirectRun = process.argv[1]?.endsWith('seed.ts') || process.argv[1]?.endsWith('seed.js');
+if (isDirectRun) {
+  try {
+    seedDatabase();
+  } catch (err) {
+    console.error('Seed failed:', err);
+    process.exit(1);
+  } finally {
+    sqlite.close();
+  }
+}

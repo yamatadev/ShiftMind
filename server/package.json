@@ -4,21 +4,24 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
+    "start": "node dist/index.js",
     "migrate": "tsx src/db/migrate.ts",
     "seed": "tsx src/db/seed.ts"
   },
   "dependencies": {
-    "express": "^4.21.0",
-    "better-sqlite3": "^11.6.0",
-    "drizzle-orm": "^0.36.0",
     "@anthropic-ai/sdk": "^0.39.0",
-    "dotenv": "^16.4.0"
+    "better-sqlite3": "^11.6.0",
+    "cors": "^2.8.6",
+    "dotenv": "^16.4.0",
+    "drizzle-orm": "^0.36.0",
+    "express": "^4.21.0"
   },
   "devDependencies": {
-    "@types/express": "^4.17.0",
     "@types/better-sqlite3": "^7.6.0",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^4.17.0",
+    "drizzle-kit": "^0.28.0",
     "tsx": "^4.19.0",
-    "typescript": "^5.6.0",
-    "drizzle-kit": "^0.28.0"
+    "typescript": "^5.6.0"
   }
 }
