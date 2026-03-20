@@ -1,0 +1,255 @@
+import Anthropic from '@anthropic-ai/sdk';
+import { ARIA_SYSTEM_PROMPT } from './system-prompt.js';
+import { ARIA_TOOLS } from './tools.js';
+
+import { getAssignments, deleteAssignment } from '../services/assignments.js';
+import { getAvailableWorkers, getWorkerByName } from '../services/workers.js';
+import { getTemplateForDate, updateTemplateSlot, getAllTemplates } from '../services/templates.js';
+import { autoFillSchedule, fillGap, getGaps } from '../services/autofill.js';
+import type { Role, Shift, DayType } from '../types.js';
+
+const MAX_ITERATIONS = 5;
+
+interface ChatAction {
+  type: string;
+  summary: string;
+}
+
+interface ChatResult {
+  reply: string;
+  actions: ChatAction[];
+}
+
+// ---------------------------------------------------------------------------
+// Tool executor
+// ---------------------------------------------------------------------------
+
+function executeTool(
+  name: string,
+  input: Record<string, unknown>,
+  actions: ChatAction[],
+): string {
+  switch (name) {
+    // ---- Read-only tools ----
+
+    case 'get_schedule': {
+      const rows = getAssignments(
+        input.startDate as string,
+        input.endDate as string,
+      );
+      return JSON.stringify(rows);
+    }
+
+    case 'get_workers_on_shift': {
+      // Re-use getAssignments for a single day and filter by shift
+      const all = getAssignments(input.date as string, input.date as string);
+      const filtered = all.filter((a) => a.shift === input.shift);
+      return JSON.stringify(filtered);
+    }
+
+    case 'get_available_workers': {
+      const workers = getAvailableWorkers(
+        input.date as string,
+        input.shift as Shift,
+        input.role as Role,
+      );
+      return JSON.stringify(
+        workers.map((w) => ({ id: w.id, name: w.name, role: w.role })),
+      );
+    }
+
+    case 'get_gaps': {
+      const gaps = getGaps(
+        input.startDate as string,
+        input.endDate as string,
+      );
+      return JSON.stringify(gaps);
+    }
+
+    // ---- Mutation tools ----
+
+    case 'auto_fill_schedule': {
+      const result = autoFillSchedule(
+        input.startDate as string,
+        input.endDate as string,
+        input.templateId as number | undefined,
+      );
+      actions.push({
+        type: 'assignments_changed',
+        summary: `Filled ${result.filled} slot${result.filled !== 1 ? 's' : ''}${result.gaps > 0 ? `, ${result.gaps} gap${result.gaps !== 1 ? 's' : ''} remaining` : ''}`,
+      });
+      return JSON.stringify(result);
+    }
+
+    case 'remove_worker_from_shift': {
+      const workerName = input.workerName as string;
+      const date = input.date as string;
+      const shift = input.shift as string;
+
+      // Look up worker by name
+      const matches = getWorkerByName(workerName);
+      if (matches.length === 0) {
+        return JSON.stringify({ error: `No worker found matching "${workerName}"` });
+      }
+      if (matches.length > 1) {
+        return JSON.stringify({
+          error: `Multiple workers match "${workerName}": ${matches.map((w) => w.name).join(', ')}. Please be more specific.`,
+        });
+      }
+
+      const worker = matches[0];
+
+      // Find their assignment for that date + shift
+      const dayAssignments = getAssignments(date, date);
+      const assignment = dayAssignments.find(
+        (a) => a.workerId === worker.id && a.shift === shift,
+      );
+
+      if (!assignment) {
+        return JSON.stringify({
+          error: `${worker.name} is not assigned to the ${shift} shift on ${date}`,
+        });
+      }
+
+      const deleted = deleteAssignment(assignment.id);
+      actions.push({
+        type: 'assignments_changed',
+        summary: `Removed ${worker.name} from ${shift} shift on ${date}`,
+      });
+      return JSON.stringify({ success: true, removed: deleted });
+    }
+
+    case 'fill_gap': {
+      const result = fillGap(
+        input.date as string,
+        input.shift as Shift,
+        input.role as Role,
+      );
+      if (result) {
+        actions.push({
+          type: 'assignments_changed',
+          summary: `Assigned ${result.workerName} to ${input.shift} ${input.role} on ${input.date}`,
+        });
+        return JSON.stringify({ success: true, assigned: result });
+      }
+      return JSON.stringify({
+        error: `No available ${input.role} workers for ${input.shift} shift on ${input.date}`,
+      });
+    }
+
+    case 'adjust_template_requirement': {
+      const dayType = input.dayType as DayType;
+      const shift = input.shift as Shift;
+      const role = input.role as Role;
+      const requiredCount = input.requiredCount as number;
+
+      // Find the template for this day type
+      const templates = getAllTemplates();
+      const template = templates.find((t) => t.dayType === dayType);
+      if (!template) {
+        return JSON.stringify({ error: `No template found for day type "${dayType}"` });
+      }
+
+      const updated = updateTemplateSlot(template.id, role, shift, requiredCount);
+      if (!updated) {
+        return JSON.stringify({
+          error: `No slot found for ${role} on ${shift} shift in ${dayType} template`,
+        });
+      }
+
+      actions.push({
+        type: 'template_changed',
+        summary: `Updated ${dayType} ${shift} ${role} to ${requiredCount}`,
+      });
+      return JSON.stringify({ success: true, slot: updated });
+    }
+
+    default:
+      return JSON.stringify({ error: `Unknown tool: ${name}` });
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Chat handler
+// ---------------------------------------------------------------------------
+
+export async function handleChat(
+  message: string,
+  conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }>,
+): Promise<ChatResult> {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    return {
+      reply: 'The Anthropic API key is not configured. Please set ANTHROPIC_API_KEY in your environment.',
+      actions: [],
+    };
+  }
+
+  const client = new Anthropic({ apiKey });
+  const actions: ChatAction[] = [];
+
+  // Build messages from conversation history + new message
+  const messages: Anthropic.MessageParam[] = [
+    ...conversationHistory.map((msg) => ({
+      role: msg.role as 'user' | 'assistant',
+      content: msg.content,
+    })),
+    { role: 'user', content: message },
+  ];
+
+  let currentMessages = messages;
+
+  for (let iteration = 0; iteration < MAX_ITERATIONS; iteration++) {
+    const response = await client.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1024,
+      system: ARIA_SYSTEM_PROMPT,
+      tools: ARIA_TOOLS,
+      messages: currentMessages,
+    });
+
+    // Check if we have tool use blocks
+    const toolUseBlocks = response.content.filter(
+      (block): block is Anthropic.ContentBlock & { type: 'tool_use' } =>
+        block.type === 'tool_use',
+    );
+
+    // If no tool use, extract text and return
+    if (toolUseBlocks.length === 0) {
+      const textBlocks = response.content.filter(
+        (block): block is Anthropic.TextBlock => block.type === 'text',
+      );
+      const reply = textBlocks.map((b) => b.text).join('\n') || 'I processed your request.';
+      return { reply, actions };
+    }
+
+    // Execute each tool and collect results
+    const toolResults: Anthropic.ToolResultBlockParam[] = toolUseBlocks.map(
+      (toolBlock) => {
+        const result = executeTool(
+          toolBlock.name,
+          toolBlock.input as Record<string, unknown>,
+          actions,
+        );
+        return {
+          type: 'tool_result' as const,
+          tool_use_id: toolBlock.id,
+          content: result,
+        };
+      },
+    );
+
+    // Feed tool results back into the conversation
+    currentMessages = [
+      ...currentMessages,
+      { role: 'assistant', content: response.content },
+      { role: 'user', content: toolResults },
+    ];
+  }
+
+  // If we exhausted iterations, return what we have
+  return {
+    reply: 'I completed processing your request, but it required more steps than expected. Please let me know if you need anything else.',
+    actions,
+  };
+}

@@ -7,6 +7,7 @@ import templatesRouter from './routes/templates.js';
 import assignmentsRouter from './routes/assignments.js';
 import scheduleRouter from './routes/schedule.js';
 import sessionRouter from './routes/session.js';
+import chatRouter from './routes/chat.js';
 import { removeAvailabilityOverride } from './services/workers.js';
 
 dotenv.config({ path: '../.env' });
@@ -38,6 +39,7 @@ app.use('/api/templates', templatesRouter);
 app.use('/api/assignments', assignmentsRouter);
 app.use('/api/schedule', scheduleRouter);
 app.use('/api/session', sessionRouter);
+app.use('/api/chat', chatRouter);
 
 // --- Serve client static files in production ---
 if (process.env.NODE_ENV === 'production') {
