@@ -19,3 +19,12 @@
   --font-heading: 'DM Sans', sans-serif;
   --font-body: 'IBM Plex Sans', sans-serif;
 }
+
+@keyframes typing-dot {
+  0%, 60%, 100% { opacity: 0.3; }
+  30% { opacity: 1; }
+}
+
+.typing-dot {
+  animation: typing-dot 1.4s infinite;
+}

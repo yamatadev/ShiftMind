@@ -8,20 +8,7 @@ import Sidebar from './features/sidebar/Sidebar';
 import SchedulePage from './features/calendar/SchedulePage';
 import WorkersPage from './pages/WorkersPage';
 import TemplatesPage from './pages/TemplatesPage';
-
-function AriaPanel() {
-  return (
-    <aside className="w-80 border-l border-border bg-surface shrink-0 flex flex-col">
-      <div className="p-4 border-b border-border">
-        <h2 className="font-heading font-semibold text-text-primary">Aria</h2>
-        <p className="text-xs text-text-secondary">AI scheduling assistant</p>
-      </div>
-      <div className="flex-1 p-4 text-sm text-text-secondary">
-        Chat panel coming soon.
-      </div>
-    </aside>
-  );
-}
+import AriaPanel from './features/chat/AriaPanel';
 
 function AppShellInner() {
   const { refetch } = useScheduleContext();
