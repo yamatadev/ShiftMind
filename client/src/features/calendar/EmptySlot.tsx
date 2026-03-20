@@ -39,12 +39,7 @@ export default function EmptySlot({ role, date, shift }: EmptySlotProps) {
   return (
     <button
       onClick={handleClick}
-      className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full cursor-pointer border border-dashed transition-opacity hover:opacity-80"
-      style={{
-        borderColor: '#D4A07A',
-        backgroundColor: '#FFF8F0',
-        color: '#B8860B',
-      }}
+      className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full cursor-pointer border border-dashed transition-opacity hover:opacity-80 border-gap-border bg-gap-bg text-gap-text"
     >
       {config.abbrev} &middot; Unfilled
     </button>

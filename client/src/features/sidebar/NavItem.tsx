@@ -16,7 +16,7 @@ export default function NavItem({ to, icon: Icon, label }: NavItemProps) {
         `flex items-center gap-3 px-4 py-2.5 text-sm font-medium border-l-[3px] transition-colors ${
           isActive
             ? 'border-primary text-white'
-            : 'border-transparent text-[#888] hover:text-white/80'
+            : 'border-transparent text-text-secondary hover:text-white/80'
         }`
       }
     >

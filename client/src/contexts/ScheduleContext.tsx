@@ -13,6 +13,7 @@ interface ScheduleContextValue {
   gaps: Gap[];
   loading: boolean;
   refetch: () => Promise<void>;
+  newAssignmentIds: Set<number>;
 }
 
 const ScheduleContext = createContext<ScheduleContextValue | null>(null);
@@ -33,6 +34,7 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
         gaps: schedule.gaps,
         loading: schedule.loading,
         refetch: schedule.refetch,
+        newAssignmentIds: schedule.newAssignmentIds,
       }}
     >
       {children}

@@ -17,7 +17,7 @@ export default function Sidebar() {
       {/* Logo & subtitle */}
       <div className="p-5 pb-4">
         <img src="/logo-white.svg" alt="ShiftMind" className="h-8 mb-1" />
-        <p className="text-xs text-[#888] font-body">Sunrise Senior Living</p>
+        <p className="text-xs text-text-secondary font-body">Sunrise Senior Living</p>
       </div>
 
       {/* Navigation */}
@@ -37,7 +37,7 @@ export default function Sidebar() {
         </span>
         <button
           onClick={handleLogout}
-          className="text-[#888] hover:text-white transition-colors"
+          className="text-text-secondary hover:text-white transition-colors"
           aria-label="Logout"
         >
           <LogOut size={16} />

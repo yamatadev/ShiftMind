@@ -1,18 +1,32 @@
-import { useState, type ReactNode } from 'react';
+import { useState, useRef, useCallback, type ReactNode } from 'react';
 
 interface TooltipProps {
   content: ReactNode;
   children: ReactNode;
+  delay?: number;
 }
 
-export default function Tooltip({ content, children }: TooltipProps) {
+export default function Tooltip({ content, children, delay = 300 }: TooltipProps) {
   const [visible, setVisible] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleMouseEnter = useCallback(() => {
+    timerRef.current = setTimeout(() => setVisible(true), delay);
+  }, [delay]);
+
+  const handleMouseLeave = useCallback(() => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    setVisible(false);
+  }, []);
 
   return (
     <div
       className="relative inline-block"
-      onMouseEnter={() => setVisible(true)}
-      onMouseLeave={() => setVisible(false)}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
       {children}
       {visible && (

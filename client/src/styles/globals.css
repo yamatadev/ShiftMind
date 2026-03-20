@@ -1,5 +1,5 @@
-@import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+@import "tailwindcss";
 
 @theme {
   --color-primary: #2D5A3D;
@@ -20,6 +20,14 @@
   --font-body: 'IBM Plex Sans', sans-serif;
 }
 
+@layer base {
+  body {
+    font-family: var(--font-body);
+    color: var(--color-text-primary);
+    background-color: var(--color-base);
+  }
+}
+
 @keyframes typing-dot {
   0%, 60%, 100% { opacity: 0.3; }
   30% { opacity: 1; }
@@ -27,4 +35,14 @@
 
 .typing-dot {
   animation: typing-dot 1.4s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-color: transparent; }
+  50% { background-color: rgba(45, 90, 61, 0.1); }
+  100% { background-color: transparent; }
+}
+
+.shimmer {
+  animation: shimmer 600ms ease-in-out;
 }
