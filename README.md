@@ -28,7 +28,7 @@ npm run dev
 
 - **Frontend:** http://localhost:5173
 - **Backend API:** http://localhost:3001
-- **Live Prodcution (If you don't have API Key):** https://shift-mind-client.vercel.app/
+- **Live Production (If you don't have API Key):** https://shift-mind-client.vercel.app/
 
 Click **"Enter as Demo User"** on the login page to access the app.
 
