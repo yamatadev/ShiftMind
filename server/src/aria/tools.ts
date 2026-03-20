@@ -124,7 +124,7 @@ export const ARIA_TOOLS: Anthropic.Tool[] = [
   {
     name: 'fill_gap',
     description:
-      'Find and assign the best available worker to fill a single open slot for a specific date, shift, and role.',
+      'Find and assign the best available worker to fill a single open slot for a specific date, shift, and role. Supports excluding specific workers (e.g., when replacing someone).',
     input_schema: {
       type: 'object' as const,
       properties: {
@@ -151,8 +151,70 @@ export const ARIA_TOOLS: Anthropic.Tool[] = [
           ],
           description: 'The role needed for this slot',
         },
+        excludeWorkerNames: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Names of workers to exclude from consideration (e.g., the worker being replaced). Use this when replacing a worker so they are not reassigned back.',
+        },
       },
       required: ['date', 'shift', 'role'],
+    },
+  },
+  {
+    name: 'assign_worker_to_shift',
+    description:
+      'Assign a specific worker (by name) to a shift on a given date. Use this when the user requests a specific person for a slot, rather than auto-filling.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        workerName: {
+          type: 'string',
+          description: 'The name (or partial name) of the worker to assign',
+        },
+        date: {
+          type: 'string',
+          description: 'Date in YYYY-MM-DD format',
+        },
+        shift: {
+          type: 'string',
+          enum: ['morning', 'afternoon', 'night'],
+          description: 'The shift to assign the worker to',
+        },
+        role: {
+          type: 'string',
+          enum: [
+            'RN',
+            'CNA',
+            'MED_TECH',
+            'ACTIVITIES',
+            'KITCHEN',
+            'HOUSEKEEPING',
+            'SECURITY',
+            'SUPERVISOR',
+          ],
+          description: 'The role for this assignment',
+        },
+      },
+      required: ['workerName', 'date', 'shift', 'role'],
+    },
+  },
+  {
+    name: 'clear_schedule',
+    description:
+      'Remove ALL assignments in a date range. Use this when the user asks to clear or reset a week or date range. This is a bulk operation — much faster than removing workers one by one.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        startDate: {
+          type: 'string',
+          description: 'Start date in YYYY-MM-DD format',
+        },
+        endDate: {
+          type: 'string',
+          description: 'End date in YYYY-MM-DD format',
+        },
+      },
+      required: ['startDate', 'endDate'],
     },
   },
   {

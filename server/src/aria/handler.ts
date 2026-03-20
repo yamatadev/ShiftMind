@@ -1,14 +1,14 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { ARIA_SYSTEM_PROMPT } from './system-prompt.js';
+import { getAriaSystemPrompt } from './system-prompt.js';
 import { ARIA_TOOLS } from './tools.js';
 
-import { getAssignments, deleteAssignment } from '../services/assignments.js';
+import { getAssignments, createAssignment, deleteAssignment, clearAssignments } from '../services/assignments.js';
 import { getAvailableWorkers, getWorkerByName } from '../services/workers.js';
 import { getTemplateForDate, updateTemplateSlot, getAllTemplates } from '../services/templates.js';
 import { autoFillSchedule, fillGap, getGaps } from '../services/autofill.js';
 import type { Role, Shift, DayType } from '../types.js';
 
-const MAX_ITERATIONS = 5;
+const MAX_ITERATIONS = 10;
 
 interface ChatAction {
   type: string;
@@ -68,6 +68,18 @@ function executeTool(
 
     // ---- Mutation tools ----
 
+    case 'clear_schedule': {
+      const count = clearAssignments(
+        input.startDate as string,
+        input.endDate as string,
+      );
+      actions.push({
+        type: 'assignments_changed',
+        summary: `Cleared ${count} assignment${count !== 1 ? 's' : ''} from ${input.startDate} to ${input.endDate}`,
+      });
+      return JSON.stringify({ success: true, removed: count });
+    }
+
     case 'auto_fill_schedule': {
       const result = autoFillSchedule(
         input.startDate as string,
@@ -120,10 +132,22 @@ function executeTool(
     }
 
     case 'fill_gap': {
+      // Resolve excluded worker names to IDs
+      let excludeIds: number[] | undefined;
+      const excludeNames = input.excludeWorkerNames as string[] | undefined;
+      if (excludeNames && excludeNames.length > 0) {
+        excludeIds = [];
+        for (const name of excludeNames) {
+          const matches = getWorkerByName(name);
+          for (const m of matches) excludeIds.push(m.id);
+        }
+      }
+
       const result = fillGap(
         input.date as string,
         input.shift as Shift,
         input.role as Role,
+        excludeIds,
       );
       if (result) {
         actions.push({
@@ -135,6 +159,35 @@ function executeTool(
       return JSON.stringify({
         error: `No available ${input.role} workers for ${input.shift} shift on ${input.date}`,
       });
+    }
+
+    case 'assign_worker_to_shift': {
+      const workerName = input.workerName as string;
+      const date = input.date as string;
+      const shift = input.shift as Shift;
+      const role = input.role as Role;
+
+      const matches = getWorkerByName(workerName);
+      if (matches.length === 0) {
+        return JSON.stringify({ error: `No worker found matching "${workerName}"` });
+      }
+      if (matches.length > 1) {
+        return JSON.stringify({
+          error: `Multiple workers match "${workerName}": ${matches.map((w) => w.name).join(', ')}. Please be more specific.`,
+        });
+      }
+
+      const worker = matches[0];
+      const result = createAssignment(worker.id, date, shift, role);
+      if ('error' in result) {
+        return JSON.stringify({ error: result.error });
+      }
+
+      actions.push({
+        type: 'assignments_changed',
+        summary: `Assigned ${worker.name} to ${shift} ${role} on ${date}`,
+      });
+      return JSON.stringify({ success: true, assigned: { workerId: worker.id, workerName: worker.name } });
     }
 
     case 'adjust_template_requirement': {
@@ -202,8 +255,8 @@ export async function handleChat(
   for (let iteration = 0; iteration < MAX_ITERATIONS; iteration++) {
     const response = await client.messages.create({
       model: 'claude-sonnet-4-6',
-      max_tokens: 1024,
-      system: ARIA_SYSTEM_PROMPT,
+      max_tokens: 2048,
+      system: getAriaSystemPrompt(),
       tools: ARIA_TOOLS,
       messages: currentMessages,
     });
@@ -247,9 +300,13 @@ export async function handleChat(
     ];
   }
 
-  // If we exhausted iterations, return what we have
+  // If we exhausted iterations, be honest about what happened
+  const actionSummary = actions.length > 0
+    ? `\n\nWhat I managed to do:\n${actions.map((a) => `- ${a.summary}`).join('\n')}`
+    : '';
+
   return {
-    reply: 'I completed processing your request, but it required more steps than expected. Please let me know if you need anything else.',
+    reply: `I wasn't able to fully complete your request — it required more steps than I can handle in one go.${actionSummary}\n\nPlease try breaking the task into smaller steps, or let me know what's still needed and I'll continue.`,
     actions,
   };
 }

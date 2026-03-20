@@ -161,8 +161,15 @@ export function fillGap(
   date: string,
   shift: Shift,
   role: Role,
+  excludeWorkerIds?: number[],
 ): { workerId: number; workerName: string } | null {
-  const available = getAvailableWorkers(date, shift, role);
+  let available = getAvailableWorkers(date, shift, role);
+
+  if (excludeWorkerIds && excludeWorkerIds.length > 0) {
+    const excluded = new Set(excludeWorkerIds);
+    available = available.filter((w) => !excluded.has(w.id));
+  }
+
   if (available.length === 0) return null;
 
   // Gather scoring context

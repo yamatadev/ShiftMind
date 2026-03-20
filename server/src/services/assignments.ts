@@ -55,6 +55,25 @@ export function createAssignment(
 }
 
 /**
+ * Delete all assignments in a date range. Returns the count of deleted assignments.
+ */
+export function clearAssignments(startDate: string, endDate: string): number {
+  const existing = db
+    .select({ id: assignments.id })
+    .from(assignments)
+    .where(between(assignments.date, startDate, endDate))
+    .all();
+
+  if (existing.length === 0) return 0;
+
+  db.delete(assignments)
+    .where(between(assignments.date, startDate, endDate))
+    .run();
+
+  return existing.length;
+}
+
+/**
  * Delete an assignment by ID. Returns the gap info (date, shift, role)
  * or null if not found.
  */
