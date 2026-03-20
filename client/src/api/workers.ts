@@ -30,6 +30,7 @@ export function createWorkerApi(data: {
   phone: string;
   hireDate: string;
   notes?: string;
+  weeklyAvailability?: boolean[];
 }): Promise<Worker> {
   return fetchApi<Worker>('/api/workers', {
     method: 'POST',

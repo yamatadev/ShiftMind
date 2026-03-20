@@ -60,6 +60,7 @@ export default function WorkerModal({ worker, onClose, onSave }: WorkerModalProp
           phone,
           hireDate,
           notes: notes || undefined,
+          weeklyAvailability: availability,
         });
         onSave(`${name} added successfully`);
       }

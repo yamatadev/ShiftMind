@@ -221,6 +221,7 @@ export function createWorker(data: {
   phone: string;
   hireDate: string;
   notes?: string;
+  weeklyAvailability?: boolean[];
 }): Worker {
   const worker = db
     .insert(workers)
@@ -237,12 +238,12 @@ export function createWorker(data: {
     .returning()
     .get();
 
-  // Create default availability (all 7 days available for full-time, Mon-Fri for part-time)
+  // Use provided availability, or default to all-off
   for (let day = 0; day < 7; day++) {
     db.insert(availability).values({
       workerId: worker.id,
       dayOfWeek: day,
-      isAvailable: data.isPartTime ? day < 5 : true,
+      isAvailable: data.weeklyAvailability ? data.weeklyAvailability[day] : false,
     }).run();
   }
 

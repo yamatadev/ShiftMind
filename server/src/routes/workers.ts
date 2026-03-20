@@ -88,12 +88,12 @@ router.post('/:id/availability-overrides', (req, res) => {
 
 // POST /api/workers — create a new worker
 router.post('/', (req, res) => {
-  const { name, role, isPartTime, phone, hireDate, notes } = req.body;
+  const { name, role, isPartTime, phone, hireDate, notes, weeklyAvailability } = req.body;
   if (!name || !role || !phone || !hireDate) {
     res.status(400).json({ error: 'name, role, phone, and hireDate are required' });
     return;
   }
-  const worker = createWorker({ name, role, isPartTime: !!isPartTime, phone, hireDate, notes });
+  const worker = createWorker({ name, role, isPartTime: !!isPartTime, phone, hireDate, notes, weeklyAvailability });
   res.status(201).json(worker);
 });
 
