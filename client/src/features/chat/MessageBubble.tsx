@@ -1,10 +1,13 @@
 import type { ChatMessage } from '../../types';
+import MarkdownText from '../../components/MarkdownText';
 
 function AriaAvatar() {
   return (
-    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary to-primary-light flex items-center justify-center shrink-0">
-      <span className="text-xs font-semibold text-white leading-none">A</span>
-    </div>
+    <img
+      src="/aria-avatar.png"
+      alt="Aria"
+      className="w-7 h-7 rounded-full shrink-0 object-cover"
+    />
   );
 }
 
@@ -34,7 +37,7 @@ export default function MessageBubble({ message }: MessageBubbleProps) {
       <div className="max-w-[85%]">
         <p className="text-[10px] text-text-secondary mb-1">Aria</p>
         <div className="bg-gray-100 text-text-primary rounded-2xl rounded-tl-sm px-3 py-2">
-          <p className="text-sm leading-relaxed">{message.content}</p>
+          <MarkdownText content={message.content} />
         </div>
       </div>
     </div>

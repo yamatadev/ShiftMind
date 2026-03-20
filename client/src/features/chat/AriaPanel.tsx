@@ -39,9 +39,7 @@ export default function AriaPanel() {
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 && !isLoading && (
           <div className="flex flex-col items-center justify-center h-full text-center">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary-light flex items-center justify-center mb-3">
-              <span className="text-sm font-semibold text-white">A</span>
-            </div>
+            <img src="/aria-avatar.png" alt="Aria" className="w-10 h-10 rounded-full object-cover mb-3" />
             <p className="text-sm text-text-secondary">
               Hi! I'm Aria, your scheduling assistant. How can I help?
             </p>
