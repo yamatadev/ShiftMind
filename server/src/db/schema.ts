@@ -30,7 +30,9 @@ export const availability = sqliteTable('availability', {
   workerId: integer('worker_id').notNull().references(() => workers.id),
   dayOfWeek: integer('day_of_week').notNull(), // 0=Mon … 6=Sun
   isAvailable: integer('is_available', { mode: 'boolean' }).notNull().default(true),
-});
+}, (table) => ({
+  uniqueWorkerDay: uniqueIndex('idx_availability_worker_day').on(table.workerId, table.dayOfWeek),
+}));
 
 export const availabilityOverrides = sqliteTable('availability_overrides', {
   id: integer('id').primaryKey({ autoIncrement: true }),

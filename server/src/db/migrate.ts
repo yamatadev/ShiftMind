@@ -50,6 +50,9 @@ const statements = [
     role TEXT NOT NULL
   )`,
 
+  `CREATE UNIQUE INDEX IF NOT EXISTS idx_availability_worker_day
+    ON availability(worker_id, day_of_week)`,
+
   `CREATE UNIQUE INDEX IF NOT EXISTS idx_assignments_worker_date_shift
     ON assignments(worker_id, date, shift)`,
 ];
