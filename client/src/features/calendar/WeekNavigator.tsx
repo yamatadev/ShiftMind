@@ -1,6 +1,8 @@
+import { useMemo } from 'react';
 import { ChevronLeft, ChevronRight, MessageCircle } from 'lucide-react';
 import { useScheduleContext } from '../../contexts/ScheduleContext';
 import { useChatContext } from '../../contexts/ChatContext';
+import { getMonday } from '../../lib/dates';
 
 function formatWeekRange(weekStart: Date): string {
   const end = new Date(weekStart);
@@ -21,6 +23,11 @@ function formatWeekRange(weekStart: Date): string {
 export default function WeekNavigator() {
   const { weekStart, prevWeek, nextWeek, goToToday } = useScheduleContext();
   const { toggleOpen } = useChatContext();
+
+  const isCurrentWeek = useMemo(() => {
+    const todayMonday = getMonday(new Date());
+    return weekStart.getTime() === todayMonday.getTime();
+  }, [weekStart]);
 
   return (
     <div className="flex items-center justify-between px-6 py-3 border-b border-border bg-surface">
@@ -47,7 +54,12 @@ export default function WeekNavigator() {
 
         <button
           onClick={goToToday}
-          className="ml-2 px-3 py-1.5 text-xs font-semibold rounded-md bg-primary text-white hover:bg-primary-light transition-colors"
+          disabled={isCurrentWeek}
+          className={`ml-2 px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${
+            isCurrentWeek
+              ? 'bg-border text-secondary cursor-default'
+              : 'bg-primary text-white hover:bg-primary-light'
+          }`}
         >
           Today
         </button>

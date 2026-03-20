@@ -1,5 +1,6 @@
 import WeekNavigator from './WeekNavigator';
 import CalendarGrid from './CalendarGrid';
+import RoleLegend from '../../components/RoleLegend';
 import { useScheduleContext } from '../../contexts/ScheduleContext';
 
 function LoadingSkeleton() {
@@ -27,6 +28,7 @@ export default function SchedulePage() {
   return (
     <>
       <WeekNavigator />
+      <RoleLegend />
       <div className="flex-1 overflow-auto p-6">
         {loading ? (
           <LoadingSkeleton />
