@@ -7,7 +7,7 @@ import RegisterPage from './features/auth/RegisterPage';
 import Sidebar from './features/sidebar/Sidebar';
 import SchedulePage from './features/calendar/SchedulePage';
 import WorkersPage from './features/workers/WorkersPage';
-import TemplatesPage from './pages/TemplatesPage';
+import TemplatesPage from './features/templates/TemplatesPage';
 import AriaPanel from './features/chat/AriaPanel';
 
 function AppShellInner() {
