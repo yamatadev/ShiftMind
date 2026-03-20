@@ -55,7 +55,7 @@ shift-mind/
 │   │   ├── hooks/            # useWeek, useChat, useSchedule, useSession
 │   │   ├── types/            # Shared TS types
 │   │   └── styles/           # Global CSS, font imports, palette tokens
-│   └── tailwind.config.ts
+│   └── (Tailwind v4 — theme defined in CSS via @theme, no config file)
 ├── server/
 │   ├── package.json
 │   ├── src/
