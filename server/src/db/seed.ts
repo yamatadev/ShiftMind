@@ -10,7 +10,7 @@ import {
   type Shift,
   ROLES,
 } from './schema.js';
-import { eq, and, count } from 'drizzle-orm';
+import { count } from 'drizzle-orm';
 
 // ─── Helpers ─────────────────────────────────────────────────────────
 
@@ -272,6 +272,7 @@ async function seed() {
     return;
   }
 
+  const runSeed = sqlite.transaction(() => {
   console.log('Inserting 53 workers...');
   const insertedWorkers: { id: number; role: Role }[] = [];
 
@@ -503,6 +504,9 @@ async function seed() {
   }
 
   console.log(`Inserted ${assignmentCount} assignments.`);
+  }); // end transaction
+
+  runSeed();
   console.log('Seed complete!');
   sqlite.close();
 }
