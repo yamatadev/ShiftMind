@@ -20,12 +20,8 @@ initDatabase();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// --- CORS ---
-const corsOrigin = process.env.CORS_ORIGIN || '*';
-app.use(cors({
-  origin: corsOrigin === '*' ? true : corsOrigin.split(','),
-  credentials: true,
-}));
+// --- CORS — allow all origins for demo purposes ---
+app.use(cors());
 
 app.use(express.json());
 
