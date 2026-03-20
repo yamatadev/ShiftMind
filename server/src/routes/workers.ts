@@ -2,12 +2,14 @@ import { Router } from 'express';
 import type { Role, Shift } from '../types.js';
 import {
   getAllWorkers,
+  getAllWorkersWithAvailability,
   getWorkerById,
   getAvailableWorkers,
   getWorkerAvailability,
   addAvailabilityOverride,
   createWorker,
   updateWorker,
+  deleteWorker,
 } from '../services/workers.js';
 
 const router = Router();
@@ -17,6 +19,14 @@ router.get('/', (req, res) => {
   const role = req.query.role as Role | undefined;
   const workers = getAllWorkers(role);
   res.json(workers);
+});
+
+// GET /api/workers/with-availability — workers + weekly availability array
+router.get('/with-availability', (req, res) => {
+  const role = req.query.role as Role | undefined;
+  const includeInactive = req.query.includeInactive === 'true';
+  const result = getAllWorkersWithAvailability(role, includeInactive);
+  res.json(result);
 });
 
 // GET /api/workers/available — must be registered BEFORE /:id
@@ -100,6 +110,21 @@ router.patch('/:id', (req, res) => {
     return;
   }
   res.json(updated);
+});
+
+// DELETE /api/workers/:id — delete a worker
+router.delete('/:id', (req, res) => {
+  const id = Number(req.params.id);
+  if (isNaN(id)) {
+    res.status(400).json({ error: 'Invalid worker ID' });
+    return;
+  }
+  const deleted = deleteWorker(id);
+  if (!deleted) {
+    res.status(404).json({ error: 'Worker not found' });
+    return;
+  }
+  res.json({ success: true });
 });
 
 export default router;

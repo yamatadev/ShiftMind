@@ -6,6 +6,11 @@ export function fetchWorkers(role?: Role): Promise<Worker[]> {
   return fetchApi<Worker[]>(`/api/workers${params}`);
 }
 
+export function fetchWorkersWithAvailability(includeInactive?: boolean): Promise<(Worker & { weeklyAvailability: boolean[] })[]> {
+  const params = includeInactive ? '?includeInactive=true' : '';
+  return fetchApi<(Worker & { weeklyAvailability: boolean[] })[]>(`/api/workers/with-availability${params}`);
+}
+
 export function fetchWorkerById(id: number): Promise<Worker> {
   return fetchApi<Worker>(`/api/workers/${id}`);
 }
@@ -39,9 +44,16 @@ export function updateWorkerApi(id: number, data: Partial<{
   phone: string;
   notes: string | null;
   isActive: boolean;
+  weeklyAvailability: boolean[];
 }>): Promise<Worker> {
   return fetchApi<Worker>(`/api/workers/${id}`, {
     method: 'PATCH',
     body: JSON.stringify(data),
+  });
+}
+
+export function deleteWorkerApi(id: number): Promise<{ success: boolean }> {
+  return fetchApi<{ success: boolean }>(`/api/workers/${id}`, {
+    method: 'DELETE',
   });
 }

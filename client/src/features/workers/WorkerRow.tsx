@@ -1,3 +1,4 @@
+import { Power, Trash2 } from 'lucide-react';
 import type { Worker } from '../../types';
 import RoleBadge from '../../components/RoleBadge';
 
@@ -16,22 +17,22 @@ function formatHireDate(dateStr: string): string {
   return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
 }
 
+type WorkerWithAvailability = Worker & { weeklyAvailability: boolean[] };
+
 interface WorkerRowProps {
-  worker: Worker;
-  onEdit: (worker: Worker) => void;
+  worker: WorkerWithAvailability;
+  onEdit: (worker: WorkerWithAvailability) => void;
+  onToggleActive: (worker: WorkerWithAvailability) => void;
+  onDelete: (worker: WorkerWithAvailability) => void;
 }
 
-export default function WorkerRow({ worker, onEdit }: WorkerRowProps) {
+export default function WorkerRow({ worker, onEdit, onToggleActive, onDelete }: WorkerRowProps) {
   const initials = getInitials(worker.name);
 
-  // Simplified availability: full-time = all 7 days green, part-time = weekdays green, weekends gray
-  const availability = DAY_LABELS.map((_, i) => {
-    if (!worker.isPartTime) return true; // full-time: all available
-    return i < 5; // part-time: Mon–Fri available, Sat–Sun not
-  });
+  const availability = worker.weeklyAvailability;
 
   return (
-    <tr className="border-t border-border hover:bg-base/50 transition-colors">
+    <tr className={`border-t border-border transition-colors ${worker.isActive ? 'hover:bg-base/50' : 'opacity-60 bg-base/30'}`}>
       {/* Name */}
       <td className="px-4 py-3">
         <div className="flex items-center gap-3">
@@ -60,7 +61,7 @@ export default function WorkerRow({ worker, onEdit }: WorkerRowProps) {
           </span>
         ) : (
           <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-amber-50 text-amber-700">
-            On Leave
+            Inactive
           </span>
         )}
       </td>
@@ -84,12 +85,32 @@ export default function WorkerRow({ worker, onEdit }: WorkerRowProps) {
 
       {/* Actions */}
       <td className="px-4 py-3">
-        <button
-          onClick={() => onEdit(worker)}
-          className="px-3 py-1 text-xs font-medium text-secondary border border-border rounded-lg hover:bg-base transition-colors"
-        >
-          Edit
-        </button>
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => onEdit(worker)}
+            className="px-3 py-1 text-xs font-medium text-secondary border border-border rounded-lg hover:bg-base transition-colors"
+          >
+            Edit
+          </button>
+          <button
+            onClick={() => onToggleActive(worker)}
+            title={worker.isActive ? 'Deactivate' : 'Activate'}
+            className={`p-1.5 rounded-lg border transition-colors ${
+              worker.isActive
+                ? 'border-border text-secondary hover:text-amber-600 hover:border-amber-300'
+                : 'border-green-200 text-green-600 hover:bg-green-50'
+            }`}
+          >
+            <Power className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => onDelete(worker)}
+            title="Delete worker"
+            className="p-1.5 rounded-lg border border-border text-secondary hover:text-red-600 hover:border-red-300 transition-colors"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
       </td>
     </tr>
   );

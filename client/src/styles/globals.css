@@ -13,6 +13,7 @@
   --color-gap-border: #D4A07A;
   --color-gap-bg: #FFF8F0;
   --color-gap-text: #B8860B;
+  --color-accent: #2D5A3D;
   --color-text-primary: #1A1A1A;
   --color-text-secondary: #888888;
 
@@ -45,4 +46,9 @@
 
 .shimmer {
   animation: shimmer 600ms ease-in-out;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
 }

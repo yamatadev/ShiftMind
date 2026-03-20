@@ -32,6 +32,32 @@ export function getAllWorkers(role?: Role): Worker[] {
 }
 
 /**
+ * List workers with their weekly availability (boolean[7], index 0=Mon … 6=Sun).
+ */
+export function getAllWorkersWithAvailability(role?: Role, includeInactive?: boolean): (Worker & { weeklyAvailability: boolean[] })[] {
+  const workerList = includeInactive ? getAllWorkersIncludingInactive(role) : getAllWorkers(role);
+
+  // Fetch all availability rows in one query
+  const allAvail = db.select().from(availability).all();
+  const availByWorker = new Map<number, Map<number, boolean>>();
+  for (const row of allAvail) {
+    if (!availByWorker.has(row.workerId)) {
+      availByWorker.set(row.workerId, new Map());
+    }
+    availByWorker.get(row.workerId)!.set(row.dayOfWeek, row.isAvailable);
+  }
+
+  return workerList.map((worker) => {
+    const avail = availByWorker.get(worker.id);
+    const weeklyAvailability = Array.from({ length: 7 }, (_, day) => {
+      if (avail && avail.has(day)) return avail.get(day)!;
+      return true; // default: available if no record
+    });
+    return { ...worker, weeklyAvailability };
+  });
+}
+
+/**
  * Get a single worker by ID, along with their availability data.
  */
 export function getWorkerById(id: number): {
@@ -224,7 +250,7 @@ export function createWorker(data: {
 }
 
 /**
- * Update a worker's information.
+ * Update a worker's information, optionally including their weekly availability.
  */
 export function updateWorker(id: number, data: {
   name?: string;
@@ -233,23 +259,78 @@ export function updateWorker(id: number, data: {
   phone?: string;
   notes?: string | null;
   isActive?: boolean;
+  weeklyAvailability?: boolean[];
 }): Worker | null {
   const existing = db.select().from(workers).where(eq(workers.id, id)).get();
   if (!existing) return null;
 
+  const { weeklyAvailability, ...workerFields } = data;
+
   const updated = db
     .update(workers)
     .set({
-      ...(data.name !== undefined && { name: data.name, avatarSeed: data.name.toLowerCase().replace(/[^a-z]/g, '') }),
-      ...(data.role !== undefined && { role: data.role }),
-      ...(data.isPartTime !== undefined && { isPartTime: data.isPartTime }),
-      ...(data.phone !== undefined && { phone: data.phone }),
-      ...(data.notes !== undefined && { notes: data.notes }),
-      ...(data.isActive !== undefined && { isActive: data.isActive }),
+      ...(workerFields.name !== undefined && { name: workerFields.name, avatarSeed: workerFields.name.toLowerCase().replace(/[^a-z]/g, '') }),
+      ...(workerFields.role !== undefined && { role: workerFields.role }),
+      ...(workerFields.isPartTime !== undefined && { isPartTime: workerFields.isPartTime }),
+      ...(workerFields.phone !== undefined && { phone: workerFields.phone }),
+      ...(workerFields.notes !== undefined && { notes: workerFields.notes }),
+      ...(workerFields.isActive !== undefined && { isActive: workerFields.isActive }),
     })
     .where(eq(workers.id, id))
     .returning()
     .get();
 
+  // Update weekly availability if provided
+  if (weeklyAvailability && weeklyAvailability.length === 7) {
+    for (let day = 0; day < 7; day++) {
+      const existing = db
+        .select()
+        .from(availability)
+        .where(and(eq(availability.workerId, id), eq(availability.dayOfWeek, day)))
+        .get();
+
+      if (existing) {
+        db.update(availability)
+          .set({ isAvailable: weeklyAvailability[day] })
+          .where(eq(availability.id, existing.id))
+          .run();
+      } else {
+        db.insert(availability)
+          .values({ workerId: id, dayOfWeek: day, isAvailable: weeklyAvailability[day] })
+          .run();
+      }
+    }
+  }
+
   return updated ?? null;
+}
+
+/**
+ * Delete a worker and their associated data.
+ */
+export function deleteWorker(id: number): boolean {
+  const existing = db.select().from(workers).where(eq(workers.id, id)).get();
+  if (!existing) return false;
+
+  // Delete associated data
+  db.delete(availability).where(eq(availability.workerId, id)).run();
+  db.delete(availabilityOverrides).where(eq(availabilityOverrides.workerId, id)).run();
+  db.delete(assignments).where(eq(assignments.workerId, id)).run();
+  db.delete(workers).where(eq(workers.id, id)).run();
+
+  return true;
+}
+
+/**
+ * List all workers including inactive ones.
+ */
+export function getAllWorkersIncludingInactive(role?: Role): Worker[] {
+  if (role) {
+    return db
+      .select()
+      .from(workers)
+      .where(eq(workers.role, role))
+      .all();
+  }
+  return db.select().from(workers).all();
 }

@@ -4,10 +4,12 @@ import { createWorkerApi, updateWorkerApi } from '../../api/workers';
 import { ALL_ROLES, ROLE_CONFIG } from '../../lib/roles';
 import type { Role, Worker } from '../../types';
 
+const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
 interface WorkerModalProps {
-  worker?: Worker;
+  worker?: Worker & { weeklyAvailability: boolean[] };
   onClose: () => void;
-  onSave: () => void;
+  onSave: (message: string) => void;
 }
 
 export default function WorkerModal({ worker, onClose, onSave }: WorkerModalProps) {
@@ -20,9 +22,20 @@ export default function WorkerModal({ worker, onClose, onSave }: WorkerModalProp
   const [isPartTime, setIsPartTime] = useState(worker?.isPartTime ?? false);
   const [notes, setNotes] = useState(worker?.notes ?? '');
   const [isActive, setIsActive] = useState(worker?.isActive ?? true);
+  const [availability, setAvailability] = useState<boolean[]>(
+    worker?.weeklyAvailability ?? [false, false, false, false, false, false, false],
+  );
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+
+  function toggleDay(index: number) {
+    setAvailability((prev) => {
+      const next = [...prev];
+      next[index] = !next[index];
+      return next;
+    });
+  }
 
   async function handleSave() {
     setError('');
@@ -36,7 +49,9 @@ export default function WorkerModal({ worker, onClose, onSave }: WorkerModalProp
           phone,
           notes: notes || null,
           isActive,
+          weeklyAvailability: availability,
         });
+        onSave(`${name} updated successfully`);
       } else {
         await createWorkerApi({
           name,
@@ -46,21 +61,20 @@ export default function WorkerModal({ worker, onClose, onSave }: WorkerModalProp
           hireDate,
           notes: notes || undefined,
         });
+        onSave(`${name} added successfully`);
       }
-      onSave();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to save worker';
       setError(message);
-    } finally {
       setSaving(false);
     }
   }
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-surface rounded-xl shadow-lg border border-border w-full max-w-md">
+      <div className="bg-surface rounded-xl shadow-lg border border-border w-full max-w-md max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border sticky top-0 bg-surface z-10">
           <h3 className="text-lg font-heading font-semibold text-primary">
             {isEdit ? 'Edit Worker' : 'Add Worker'}
           </h3>
@@ -151,6 +165,30 @@ export default function WorkerModal({ worker, onClose, onSave }: WorkerModalProp
             </label>
           )}
 
+          {/* Weekly Availability */}
+          <div>
+            <label className="block text-sm font-medium text-primary mb-2">Weekly Availability</label>
+            <div className="flex items-center gap-1.5">
+              {DAY_LABELS.map((label, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => toggleDay(i)}
+                  className={`flex-1 py-2 text-xs font-medium rounded-lg transition-colors ${
+                    availability[i]
+                      ? 'bg-accent text-white'
+                      : 'bg-base border border-border text-secondary'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-secondary mt-1.5">
+              Click days to toggle availability
+            </p>
+          </div>
+
           {/* Notes */}
           <div>
             <label className="block text-sm font-medium text-primary mb-1">Notes</label>
@@ -170,7 +208,7 @@ export default function WorkerModal({ worker, onClose, onSave }: WorkerModalProp
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-border">
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-border sticky bottom-0 bg-surface">
           <button
             onClick={onClose}
             className="px-4 py-2 text-sm font-medium text-secondary border border-border rounded-lg hover:bg-base transition-colors"
