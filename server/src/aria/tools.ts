@@ -275,4 +275,19 @@ export const ARIA_TOOLS: Anthropic.Tool[] = [
       required: ['dayType', 'shift', 'role', 'requiredCount'],
     },
   },
+  {
+    name: 'get_worker_info',
+    description:
+      'Look up a worker by name to see their profile: role, employment type, hire date, phone, active status, and weekly availability. Use this when asked about a specific worker.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        workerName: {
+          type: 'string',
+          description: 'The name (or partial name) of the worker to look up',
+        },
+      },
+      required: ['workerName'],
+    },
+  },
 ];

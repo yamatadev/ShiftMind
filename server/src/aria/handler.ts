@@ -3,7 +3,7 @@ import { getAriaSystemPrompt } from './system-prompt.js';
 import { ARIA_TOOLS } from './tools.js';
 
 import { getAssignments, createAssignment, deleteAssignment, clearAssignments } from '../services/assignments.js';
-import { getAvailableWorkers, getWorkerByName } from '../services/workers.js';
+import { getAvailableWorkers, getWorkerByName, getWorkerAvailability } from '../services/workers.js';
 import { getTemplateForDate, updateTemplateSlot, getAllTemplates } from '../services/templates.js';
 import { autoFillSchedule, fillGap, getGaps } from '../services/autofill.js';
 import type { Role, Shift, DayType } from '../types.js';
@@ -215,6 +215,44 @@ function executeTool(
         summary: `Updated ${dayType} ${shift} ${role} to ${requiredCount}`,
       });
       return JSON.stringify({ success: true, slot: updated });
+    }
+
+    case 'get_worker_info': {
+      const workerName = input.workerName as string;
+      const matches = getWorkerByName(workerName);
+      if (matches.length === 0) {
+        return JSON.stringify({ error: `No worker found matching "${workerName}"` });
+      }
+      if (matches.length > 1) {
+        return JSON.stringify({
+          workers: matches.map((w) => ({ id: w.id, name: w.name, role: w.role })),
+          note: `Multiple workers match "${workerName}". Please be more specific.`,
+        });
+      }
+
+      const worker = matches[0];
+      const avail = getWorkerAvailability(worker.id);
+      const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      const availableDays = avail.weekly
+        .filter((a) => a.isAvailable)
+        .map((a) => dayNames[a.dayOfWeek])
+        .join(', ');
+
+      return JSON.stringify({
+        id: worker.id,
+        name: worker.name,
+        role: worker.role,
+        isPartTime: worker.isPartTime,
+        isActive: worker.isActive,
+        hireDate: worker.hireDate,
+        phone: worker.phone,
+        availableDays: availableDays || 'None',
+        upcomingOverrides: avail.overrides.map((o) => ({
+          date: o.date,
+          available: o.isAvailable,
+          reason: o.reason,
+        })),
+      });
     }
 
     default:
