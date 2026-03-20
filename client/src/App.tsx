@@ -5,7 +5,7 @@ import { ChatProvider } from './contexts/ChatContext';
 import LoginPage from './features/auth/LoginPage';
 import RegisterPage from './features/auth/RegisterPage';
 import Sidebar from './features/sidebar/Sidebar';
-import SchedulePage from './pages/SchedulePage';
+import SchedulePage from './features/calendar/SchedulePage';
 import WorkersPage from './pages/WorkersPage';
 import TemplatesPage from './pages/TemplatesPage';
 
