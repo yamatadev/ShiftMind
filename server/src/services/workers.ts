@@ -184,3 +184,72 @@ export function removeAvailabilityOverride(overrideId: number): void {
     .where(eq(availabilityOverrides.id, overrideId))
     .run();
 }
+
+/**
+ * Create a new worker.
+ */
+export function createWorker(data: {
+  name: string;
+  role: Role;
+  isPartTime: boolean;
+  phone: string;
+  hireDate: string;
+  notes?: string;
+}): Worker {
+  const worker = db
+    .insert(workers)
+    .values({
+      name: data.name,
+      role: data.role,
+      avatarSeed: data.name.toLowerCase().replace(/[^a-z]/g, ''),
+      isActive: true,
+      isPartTime: data.isPartTime,
+      hireDate: data.hireDate,
+      phone: data.phone,
+      notes: data.notes ?? null,
+    })
+    .returning()
+    .get();
+
+  // Create default availability (all 7 days available for full-time, Mon-Fri for part-time)
+  for (let day = 0; day < 7; day++) {
+    db.insert(availability).values({
+      workerId: worker.id,
+      dayOfWeek: day,
+      isAvailable: data.isPartTime ? day < 5 : true,
+    }).run();
+  }
+
+  return worker;
+}
+
+/**
+ * Update a worker's information.
+ */
+export function updateWorker(id: number, data: {
+  name?: string;
+  role?: Role;
+  isPartTime?: boolean;
+  phone?: string;
+  notes?: string | null;
+  isActive?: boolean;
+}): Worker | null {
+  const existing = db.select().from(workers).where(eq(workers.id, id)).get();
+  if (!existing) return null;
+
+  const updated = db
+    .update(workers)
+    .set({
+      ...(data.name !== undefined && { name: data.name, avatarSeed: data.name.toLowerCase().replace(/[^a-z]/g, '') }),
+      ...(data.role !== undefined && { role: data.role }),
+      ...(data.isPartTime !== undefined && { isPartTime: data.isPartTime }),
+      ...(data.phone !== undefined && { phone: data.phone }),
+      ...(data.notes !== undefined && { notes: data.notes }),
+      ...(data.isActive !== undefined && { isActive: data.isActive }),
+    })
+    .where(eq(workers.id, id))
+    .returning()
+    .get();
+
+  return updated ?? null;
+}

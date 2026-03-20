@@ -17,3 +17,31 @@ export function fetchAvailableWorkers(date: string, shift: string, role: Role): 
 export function fetchWorkerAvailability(id: number): Promise<{ date: string; available: boolean }[]> {
   return fetchApi<{ date: string; available: boolean }[]>(`/api/workers/${id}/availability`);
 }
+
+export function createWorkerApi(data: {
+  name: string;
+  role: string;
+  isPartTime: boolean;
+  phone: string;
+  hireDate: string;
+  notes?: string;
+}): Promise<Worker> {
+  return fetchApi<Worker>('/api/workers', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export function updateWorkerApi(id: number, data: Partial<{
+  name: string;
+  role: string;
+  isPartTime: boolean;
+  phone: string;
+  notes: string | null;
+  isActive: boolean;
+}>): Promise<Worker> {
+  return fetchApi<Worker>(`/api/workers/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+}

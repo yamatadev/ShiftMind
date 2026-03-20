@@ -18,9 +18,10 @@ function formatHireDate(dateStr: string): string {
 
 interface WorkerRowProps {
   worker: Worker;
+  onEdit: (worker: Worker) => void;
 }
 
-export default function WorkerRow({ worker }: WorkerRowProps) {
+export default function WorkerRow({ worker, onEdit }: WorkerRowProps) {
   const initials = getInitials(worker.name);
 
   // Simplified availability: full-time = all 7 days green, part-time = weekdays green, weekends gray
@@ -83,8 +84,11 @@ export default function WorkerRow({ worker }: WorkerRowProps) {
 
       {/* Actions */}
       <td className="px-4 py-3">
-        <button className="px-3 py-1 text-xs font-medium text-secondary border border-border rounded-lg hover:bg-base transition-colors">
-          View
+        <button
+          onClick={() => onEdit(worker)}
+          className="px-3 py-1 text-xs font-medium text-secondary border border-border rounded-lg hover:bg-base transition-colors"
+        >
+          Edit
         </button>
       </td>
     </tr>

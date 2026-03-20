@@ -6,6 +6,8 @@ import {
   getAvailableWorkers,
   getWorkerAvailability,
   addAvailabilityOverride,
+  createWorker,
+  updateWorker,
 } from '../services/workers.js';
 
 const router = Router();
@@ -72,6 +74,32 @@ router.post('/:id/availability-overrides', (req, res) => {
   }
   const override = addAvailabilityOverride(id, date, isAvailable, reason);
   res.status(201).json(override);
+});
+
+// POST /api/workers — create a new worker
+router.post('/', (req, res) => {
+  const { name, role, isPartTime, phone, hireDate, notes } = req.body;
+  if (!name || !role || !phone || !hireDate) {
+    res.status(400).json({ error: 'name, role, phone, and hireDate are required' });
+    return;
+  }
+  const worker = createWorker({ name, role, isPartTime: !!isPartTime, phone, hireDate, notes });
+  res.status(201).json(worker);
+});
+
+// PATCH /api/workers/:id — update a worker
+router.patch('/:id', (req, res) => {
+  const id = Number(req.params.id);
+  if (isNaN(id)) {
+    res.status(400).json({ error: 'Invalid worker ID' });
+    return;
+  }
+  const updated = updateWorker(id, req.body);
+  if (!updated) {
+    res.status(404).json({ error: 'Worker not found' });
+    return;
+  }
+  res.json(updated);
 });
 
 export default router;

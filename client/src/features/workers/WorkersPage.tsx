@@ -1,23 +1,30 @@
-import { useState, useEffect, useMemo } from 'react';
-import { Search } from 'lucide-react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { Search, UserPlus } from 'lucide-react';
 import { fetchWorkers } from '../../api/workers';
 import { ROLE_CONFIG, ALL_ROLES } from '../../lib/roles';
 import type { Role, Worker } from '../../types';
 import WorkerRow from './WorkerRow';
+import WorkerModal from './WorkerModal';
 
 export default function WorkersPage() {
   const [workers, setWorkers] = useState<Worker[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState<Role | ''>('');
+  const [editingWorker, setEditingWorker] = useState<Worker | null>(null);
+  const [showAddModal, setShowAddModal] = useState(false);
 
-  useEffect(() => {
+  const loadWorkers = useCallback(() => {
     setLoading(true);
     fetchWorkers()
       .then(setWorkers)
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    loadWorkers();
+  }, [loadWorkers]);
 
   const filtered = useMemo(() => {
     return workers.filter((w) => {
@@ -50,6 +57,15 @@ export default function WorkersPage() {
               className="pl-9 pr-3 py-2 text-sm border border-border rounded-lg bg-surface text-primary placeholder:text-secondary focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent w-56"
             />
           </div>
+
+          {/* Add Worker */}
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-white bg-accent rounded-lg hover:bg-accent/90 transition-colors"
+          >
+            <UserPlus className="w-4 h-4" />
+            Add Worker
+          </button>
 
           {/* Role filter */}
           <select
@@ -94,12 +110,28 @@ export default function WorkersPage() {
               </tr>
             ) : (
               filtered.map((worker) => (
-                <WorkerRow key={worker.id} worker={worker} />
+                <WorkerRow key={worker.id} worker={worker} onEdit={setEditingWorker} />
               ))
             )}
           </tbody>
         </table>
       </div>
+
+      {/* Add / Edit Modal */}
+      {(showAddModal || editingWorker) && (
+        <WorkerModal
+          worker={editingWorker ?? undefined}
+          onClose={() => {
+            setShowAddModal(false);
+            setEditingWorker(null);
+          }}
+          onSave={() => {
+            setShowAddModal(false);
+            setEditingWorker(null);
+            loadWorkers();
+          }}
+        />
+      )}
     </div>
   );
 }
