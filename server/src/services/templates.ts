@@ -4,10 +4,24 @@ import { scheduleTemplates, templateSlots } from '../db/schema.js';
 import type { Role, Shift, DayType, ScheduleTemplate, TemplateSlot } from '../types.js';
 
 /**
- * List all schedule templates.
+ * List all schedule templates with their slots.
  */
-export function getAllTemplates(): ScheduleTemplate[] {
-  return db.select().from(scheduleTemplates).all();
+export function getAllTemplates(): (ScheduleTemplate & { slots: TemplateSlot[] })[] {
+  const templates = db.select().from(scheduleTemplates).all();
+  const allSlots = db.select().from(templateSlots).all();
+
+  const slotsByTemplate = new Map<number, TemplateSlot[]>();
+  for (const slot of allSlots) {
+    if (!slotsByTemplate.has(slot.templateId)) {
+      slotsByTemplate.set(slot.templateId, []);
+    }
+    slotsByTemplate.get(slot.templateId)!.push(slot);
+  }
+
+  return templates.map((t) => ({
+    ...t,
+    slots: slotsByTemplate.get(t.id) ?? [],
+  }));
 }
 
 /**

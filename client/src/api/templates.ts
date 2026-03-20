@@ -11,10 +11,10 @@ export function fetchTemplateById(id: number): Promise<Template> {
 
 export function updateTemplateSlot(
   templateId: number,
-  data: { slotId: number; requiredCount: number }
-): Promise<Template> {
-  return fetchApi<Template>(`/api/templates/${templateId}/slots`, {
-    method: 'PUT',
+  data: { role: string; shift: string; requiredCount: number },
+): Promise<void> {
+  return fetchApi<void>(`/api/templates/${templateId}/slots`, {
+    method: 'PATCH',
     body: JSON.stringify(data),
   });
 }
