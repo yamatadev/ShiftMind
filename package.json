@@ -1,0 +1,13 @@
+{
+  "name": "shift-mind",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -n server,client -c blue,green \"npm run dev -w server\" \"npm run dev -w client\"",
+    "setup": "npm run migrate -w server && npm run seed -w server",
+    "build": "npm run build -w client && npm run build -w server"
+  },
+  "workspaces": ["server", "client"],
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}

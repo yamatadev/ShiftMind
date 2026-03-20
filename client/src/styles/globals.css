@@ -1,0 +1,21 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+
+@theme {
+  --color-primary: #2D5A3D;
+  --color-primary-light: #5B8A72;
+  --color-base: #F8F6F3;
+  --color-surface: #FFFFFF;
+  --color-sidebar: #1A1A1A;
+  --color-border: #E0DCD5;
+  --color-border-light: #F0EDE6;
+  --color-today: #F0EDE6;
+  --color-gap-border: #D4A07A;
+  --color-gap-bg: #FFF8F0;
+  --color-gap-text: #B8860B;
+  --color-text-primary: #1A1A1A;
+  --color-text-secondary: #888888;
+
+  --font-heading: 'DM Sans', sans-serif;
+  --font-body: 'IBM Plex Sans', sans-serif;
+}
