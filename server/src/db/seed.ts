@@ -69,7 +69,7 @@ const WORKER_DATA: WorkerSeed[] = [
   // CNA — 14
   { name: 'Carlos Rivera', role: 'CNA', isPartTime: false },
   { name: 'Aisha Johnson', role: 'CNA', isPartTime: false },
-  { name: 'Mikhail Petrov', role: 'CNA', isPartTime: false },
+  { name: 'Mikhail Petrov', role: 'CNA', isPartTime: true },
   { name: 'Lena Nguyen', role: 'CNA', isPartTime: true },
   { name: 'Marcus Thompson', role: 'CNA', isPartTime: false },
   { name: 'Sofia Hernandez', role: 'CNA', isPartTime: false },
@@ -99,7 +99,7 @@ const WORKER_DATA: WorkerSeed[] = [
   { name: 'Jerome Jackson', role: 'KITCHEN', isPartTime: false },
   { name: 'Yuki Tanaka', role: 'KITCHEN', isPartTime: true },
   { name: 'Beatrice Nkomo', role: 'KITCHEN', isPartTime: false },
-  { name: 'Sam Adeyemi', role: 'KITCHEN', isPartTime: false },
+  { name: 'Sam Adeyemi', role: 'KITCHEN', isPartTime: true },
   { name: 'Hannah Mueller', role: 'KITCHEN', isPartTime: false },
   { name: 'Diego Morales', role: 'KITCHEN', isPartTime: true },
   { name: 'Lydia Abrams', role: 'KITCHEN', isPartTime: false },
@@ -122,7 +122,7 @@ const WORKER_DATA: WorkerSeed[] = [
   { name: 'Daniel Abubakar', role: 'SUPERVISOR', isPartTime: false },
   { name: 'Karen Johansson', role: 'SUPERVISOR', isPartTime: false },
   { name: 'Paul Nakamura', role: 'SUPERVISOR', isPartTime: true },
-  { name: 'Sharon Baptiste', role: 'SUPERVISOR', isPartTime: false },
+  { name: 'Sharon Baptiste', role: 'SUPERVISOR', isPartTime: true },
   { name: 'Frank Novak', role: 'SUPERVISOR', isPartTime: false },
 ];
 
