@@ -2,39 +2,8 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useSession } from './hooks/useSession';
 import { ScheduleProvider, useScheduleContext } from './contexts/ScheduleContext';
 import { ChatProvider } from './contexts/ChatContext';
-
-// Placeholder pages — will be replaced by real implementations
-function LoginPage({ onLogin }: { onLogin: () => void }) {
-  return (
-    <div className="min-h-screen bg-base flex items-center justify-center">
-      <div className="bg-surface p-8 rounded-xl shadow-sm border border-border max-w-sm w-full">
-        <h1 className="text-2xl font-heading font-bold text-text-primary mb-6">ShiftMind</h1>
-        <button
-          onClick={onLogin}
-          className="w-full bg-primary text-white py-2 px-4 rounded-lg font-medium hover:opacity-90 transition-opacity"
-        >
-          Sign In
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function RegisterPage({ onLogin }: { onLogin: () => void }) {
-  return (
-    <div className="min-h-screen bg-base flex items-center justify-center">
-      <div className="bg-surface p-8 rounded-xl shadow-sm border border-border max-w-sm w-full">
-        <h1 className="text-2xl font-heading font-bold text-text-primary mb-6">Create Account</h1>
-        <button
-          onClick={onLogin}
-          className="w-full bg-primary text-white py-2 px-4 rounded-lg font-medium hover:opacity-90 transition-opacity"
-        >
-          Register
-        </button>
-      </div>
-    </div>
-  );
-}
+import LoginPage from './features/auth/LoginPage';
+import RegisterPage from './features/auth/RegisterPage';
 
 function SchedulePage() {
   return <div className="p-6"><h2 className="text-xl font-heading font-semibold">Schedule</h2><p className="text-text-secondary mt-2">Schedule view coming soon.</p></div>;
