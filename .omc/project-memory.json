@@ -1,0 +1,154 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1775704240568,
+  "projectRoot": "/Users/renanpaes/Documents/projetos/shift-mind",
+  "techStack": {
+    "languages": [
+      {
+        "name": "JavaScript/TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "package.json"
+        ]
+      }
+    ],
+    "frameworks": [],
+    "packageManager": "npm",
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": "npm run build",
+    "testCommand": null,
+    "lintCommand": null,
+    "devCommand": "npm run dev",
+    "scripts": {
+      "dev": "concurrently -n server,client -c blue,green \"npm run dev -w server\" \"npm run dev -w client\"",
+      "setup": "npm run migrate -w server && npm run seed -w server",
+      "build": "npm run build -w client && npm run build -w server"
+    }
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": true,
+    "workspaces": [
+      "server",
+      "client"
+    ],
+    "mainDirectories": [
+      "docs"
+    ],
+    "gitBranches": null
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "client": {
+      "path": "client",
+      "purpose": null,
+      "fileCount": 8,
+      "lastAccessed": 1775704240498,
+      "keyFiles": [
+        "index.html",
+        "package.json",
+        "tsconfig.app.json",
+        "tsconfig.app.tsbuildinfo",
+        "tsconfig.json"
+      ]
+    },
+    "docs": {
+      "path": "docs",
+      "purpose": "Documentation",
+      "fileCount": 0,
+      "lastAccessed": 1775704240504,
+      "keyFiles": []
+    },
+    "server": {
+      "path": "server",
+      "purpose": null,
+      "fileCount": 6,
+      "lastAccessed": 1775704240517,
+      "keyFiles": [
+        "drizzle.config.ts",
+        "package.json",
+        "shiftmind.db",
+        "shiftmind.db-shm",
+        "shiftmind.db-wal"
+      ]
+    },
+    "client/dist": {
+      "path": "client/dist",
+      "purpose": "Distribution/build output",
+      "fileCount": 5,
+      "lastAccessed": 1775704240519,
+      "keyFiles": [
+        "aria-avatar.png",
+        "index.html",
+        "logo-dark.svg"
+      ]
+    },
+    "client/node_modules": {
+      "path": "client/node_modules",
+      "purpose": "Dependencies",
+      "fileCount": 0,
+      "lastAccessed": 1775704240520,
+      "keyFiles": []
+    },
+    "client/public": {
+      "path": "client/public",
+      "purpose": "Public files",
+      "fileCount": 4,
+      "lastAccessed": 1775704240521,
+      "keyFiles": [
+        "aria-avatar.png",
+        "logo-dark.svg",
+        "logo-white.svg"
+      ]
+    },
+    "client/src": {
+      "path": "client/src",
+      "purpose": "Source code",
+      "fileCount": 3,
+      "lastAccessed": 1775704240522,
+      "keyFiles": [
+        "App.tsx",
+        "main.tsx",
+        "vite-env.d.ts"
+      ]
+    },
+    "server/dist": {
+      "path": "server/dist",
+      "purpose": "Distribution/build output",
+      "fileCount": 8,
+      "lastAccessed": 1775704240532,
+      "keyFiles": [
+        "index.d.ts",
+        "index.d.ts.map",
+        "index.js"
+      ]
+    },
+    "server/src": {
+      "path": "server/src",
+      "purpose": "Source code",
+      "fileCount": 2,
+      "lastAccessed": 1775704240533,
+      "keyFiles": [
+        "index.ts",
+        "types.ts"
+      ]
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "README.md",
+      "accessCount": 1,
+      "lastAccessed": 1775704282101,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}
